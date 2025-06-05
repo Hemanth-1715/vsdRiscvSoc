@@ -9,7 +9,7 @@ Install the RISC-V GNU toolchain, add it to PATH, and verify the installation.
 tar -xzf riscv-toolchain-rv32imac-x86_64-ubuntu.tar.gz
 ```
 
-![Unpacking and installing](./Output%20Screenshots/Unpacking and installing.png)
+![Unpacking and installing](<./Output%20Screenshots/Unpacking and installing.png>)
 
 ```bash
 export PATH=$HOME/riscv/bin:$PATH
@@ -21,7 +21,7 @@ riscv32-unknown-elf-gcc --version
 riscv32-unknown-elf-gdb --version
 riscv32-unknown-elf-objdump --version
 ```
-![Add PATH](./Output%20Screenshots/Add PATH and verification.png)
+![Add PATH](<./Output%20Screenshots/Add PATH and verification.png>)
 
 
 
