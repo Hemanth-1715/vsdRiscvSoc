@@ -33,8 +33,7 @@ riscv32-unknown-elf-objdump --version
 
 ![Add PATH](<./Output%20Screenshots/Add PATH and verification.png>)
 
-✅ riscv32-unknown-elf-gcc --version → shows GCC 14.2.0 → Compiler is working
-✅ riscv32-unknown-elf-objdump --version → shows Binutils 2.43.1 → Disassembler is working
-✅ riscv32-unknown-elf-gdb --version → shows GDB 15.2 → Debugger is working
-
+- ✅ riscv32-unknown-elf-gcc --version → shows GCC 14.2.0 → Compiler is working
+- ✅ riscv32-unknown-elf-objdump --version → shows Binutils 2.43.1 → Disassembler is working
+- ✅ riscv32-unknown-elf-gdb --version → shows GDB 15.2 → Debugger is working
 
