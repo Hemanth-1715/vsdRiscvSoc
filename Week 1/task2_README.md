@@ -5,6 +5,9 @@
 Compile a simple "Hello, RISC-V" program using the cross-compiler.
 
 ## C Program: hello.c
+```bash
+gedit helloworld.c
+```
 ```c
 #include <stdio.h>
 
@@ -13,6 +16,8 @@ int main() {
     return 0;
 }
 ```
+- Save and close the .c file.
+![Create](<./Output Screenshots/Creating Helloworld.c.png>)
 
 ## Compilation Command
 ```bash
@@ -30,6 +35,12 @@ riscv32-unknown-elf-gcc -march=rv32imac -mabi=ilp32 -o helloworld.elf helloworld
 ```bash
 file hello.elf
 ```
+The output confirms:
 
-## Output Screenshot
-![Compile Output](./images/compile_hello_output.png)
+- The ELF is 32-bit
+- It’s for the RISC-V architecture
+- Uses the compressed instructions (RVC)
+- Uses soft-float ABI(Application Binary Interface) (floating point handled in software)
+- It’s statically linked with debug info
+
+![Compile Output](<./Output Screenshots/Compiling Helloworld.c.png>)
