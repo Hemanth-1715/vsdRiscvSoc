@@ -21,7 +21,7 @@ ls bin
 ![Inspect](<./Output Screenshots/Inspecting files.png>)
 
 
-## Add PATH and Verification Commands
+## Add PATH 
 ```bash
 export PATH=$HOME/riscv/bin:$PATH
 ```
@@ -43,7 +43,7 @@ echo $PATH
 
 ![Permanent PATH](<./Output Screenshots/Permanent PATH.png>)
 
-
+## Verification Commands
 ```bash
 riscv32-unknown-elf-gcc --version
 riscv32-unknown-elf-gdb --version
