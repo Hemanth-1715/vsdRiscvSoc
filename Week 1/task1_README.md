@@ -35,11 +35,9 @@ echo $PATH
 ```
 - 1. First open the ~/.bashrc for editing the Shell config file
 - 2. Add the export line at the end of the config file
-- 3. Save and exit:
-     In nano, press Ctrl+O, then Enter to save.
-     Then Ctrl+X to exit. 
--4. Apply the changes by using source 
--5. Verify by running the echo and checking if it includes /home/yourusername/riscv/bin.
+- 3. Save and exit: (In nano, press Ctrl+O, then Enter to save. Then Ctrl+X to exit.) 
+- 4. Apply the changes by using source 
+- 5. Verify by running the echo and checking if it includes /home/yourusername/riscv/bin.
 
 ![Permanent PATH](<./Output Screenshots/Permanent PATH.png>)
 
