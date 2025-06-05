@@ -17,6 +17,8 @@ int main() {
 }
 ```
 - Save and close the .c file.
+
+
 ![Create](<./Output Screenshots/Creating Helloworld.c.png>)
 
 ## Compilation Command
