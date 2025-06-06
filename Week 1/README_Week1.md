@@ -274,3 +274,46 @@ lw s0, 8(sp)         # restore frame pointer
 addi sp, sp, 16      # deallocate stack space (reset stack pointer)
 ret                  # return to caller
 ```
+
+# Task 4: Hex Dump & Disassembly
+
+##  Objective
+Convert the compiled ELF file into:
+- A raw Intel HEX format file
+- A human-readable disassembly using `objdump`
+
+##  Commands Used
+
+```bash
+riscv32-unknown-elf-objcopy -O ihex hello.elf hello.hex 
+riscv32-unknown-elf-objdump -d hello.elf > hello.asm
+//
+```
+The first command is used for creating a raw HEX from the ELF file
+The second command is to disassemble the HEX file using objdump to a .asm file in the same directory
+[!O1](<./Output Screenshots/Cmd for raw HEX.png>)
+[!O2](<./Output Screenshots/Disassemble HEX.png>)
+
+### Output .asm file created by disassembly by objdump
+[!.ASM](<./Output Screenshots/Assembly contents.png>)
+
+## Breakdown of the instruction fields in main
+| Column           | Meaning                                                     |
+| ---------------- | ----------------------------------------------------------- |
+| `0:`             | Offset address within the function or section               |
+| `10162`          | Actual machine code in hex (the instruction in binary form) |
+| `addi sp,sp,-16` | Human-readable disassembly of the machine code              |
+
+Mnemonic
+This is the operation name, like:
+- addi (add immediate),
+- lw (load word),
+- sw (store word),
+- jal (jump and link).
+- It tells what the instruction does, just like function names in C.
+
+Operands
+These are the inputs and destination for the instruction:
+- Registers (e.g., sp, a0, s0, etc.)
+- Immediate values (constants, like -16)
+- Addresses (for branches/jumps or memory access)
