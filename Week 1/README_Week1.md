@@ -191,7 +191,6 @@ Convert the compiled ELF file into:
 ```bash
 riscv32-unknown-elf-objcopy -O ihex hello.elf hello.hex 
 riscv32-unknown-elf-objdump -d hello.elf > hello.asm
-//
 ```
 The first command is used for creating a raw HEX from the ELF file
 The second command is to disassemble the HEX file using objdump to a .asm file in the same directory
