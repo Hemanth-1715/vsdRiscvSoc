@@ -64,111 +64,20 @@ Compile a simple "Hello, RISC-V" program using the cross-compiler.
 gedit helloworld.c
 ```
 ```c
-volatile int *UART0 = (int *)0x10000000;
+#include <stdio.h>
 
-void _start() {
-
-    const char *msg = "Hello World";
-
-    while (*msg) {
-
-        *UART0 = *msg++;
-
-    }
-
-    while (1); // Halt
-
+int main() {
+    printf("Hello, World!\n");
+    return 0;
 }
 
 ```
 Save and close the .c file.
-### Why this .c file and not a general .c file with printf() statements?
-- This is a bare metal code that directly writes characters to the memory-mapped UART (at address 0x10000000)
-- Uses _start() as the entry point, not main()
-- Does not use any standard C libraries
-- Runs on hardware (or emulated hardware like QEMU) without an operating system
-- However printf version: Needs a richer runtime, not suitable for truly bare-metal
-
-
-
 ![Create](<./Output Screenshots/Creating Helloworld.c.png>)
-
-### Creating a linker script with .ld file type
-
-```bash
-ENTRY(_start)
-
-MEMORY
-
-{
-  // This separates ROM (code/rodata) from RAM (data/bss), and avoids placing them all in one RWX segment.
-  ROM (rx)  : ORIGIN = 0x80000000, LENGTH = 512K
-
-  RAM (rwx) : ORIGIN = 0x80080000, LENGTH = 512K
-
-} 
-SECTIONS
-
-{
-
-  .text : {
-
-    *(.text)
-
-    *(.text*)
-
-  } > ROM
-
-  .rodata : {
-
-    *(.rodata)
-
-    *(.rodata*)
-
-  } > ROM
-
-  .data : {
-
-    *(.data)
-
-    *(.data*)
-
-  } > RAM AT > ROM
-
-  .bss : {
-
-    *(.bss)
-
-    *(.bss*)
-
-    *(COMMON)
-
-  } > RAM
-
-  /DISCARD/ : {
-
-    *(.comment)
-
-    *(.note*)
-
-  }
-
-}
-```
-A linker script (.ld file) is a plain-text configuration file used by the linker (ld) to control how your program's code and data are laid out in memory.
-
-Why Do We Need It?
-In embedded systems (like RISC-V development), we don't have an operating system to manage memory. So we must tell the linker:
-- Where the code (like _start, main) should go
-- Where to place data, bss, and stack
-- How to organize segments in Flash (ROM) and RAM
-Without this, the program won't know where to load and run from.
-
-
 
 ## Compilation Command
 ```bash
-riscv32-unknown-elf-gcc -march=rv32imc -mabi=ilp32 -nostartfiles -nostdlib -g -O0 -T linker.ld helloworld.c -o helloworld.elf
+riscv32-unknown-elf-gcc -march=rv32imac -mabi=ilp32 -o helloworld.elf helloworld.c
 ```
 
 ### Explanation of Flags
@@ -177,11 +86,6 @@ riscv32-unknown-elf-gcc -march=rv32imc -mabi=ilp32 -nostartfiles -nostdlib -g -O
 | `riscv32-unknown-elf-gcc` | RISC-V GCC compiler for 32-bit bare-metal targets (no OS)     |
 | `-march=rv32imc`          | Target **RISC-V 32-bit** architecture with **IMC extensions** |
 | `-mabi=ilp32`             | Use **ILP32** ABI (int, long, pointer = 32 bits)              |
-| `-nostartfiles`           | Do **not link** standard startup files (like `crt0.o`)        |
-| `-nostdlib`               | Do **not link** standard libraries (`libc`, `libm`, etc.)     |
-| `-g`                      | Include **debug symbols** for GDB debugging                   |
-| `-O0`                     | Disable optimizations (**easier debugging**)                  |
-| `-T linker.ld`            | Use custom **linker script** for memory layout                |
 | `helloworld.c`            | Your **C source file**                                        |
 | `-o helloworld.elf`       | Name of the output **ELF executable**                         |
 
@@ -195,7 +99,7 @@ The output confirms:
 - It’s for the RISC-V architecture
 - Uses the compressed instructions (RVC)
 - Uses soft-float ABI(Application Binary Interface) (floating point handled in software)
-- It’s statically linked with debug info
+- It’s statically linked
 
 ![Compile Output](<./Output Screenshots/Compiling Helloworld.c.png>)
 
@@ -207,7 +111,7 @@ Generate the RISC-V assembly (`.s`) file from the C source and understand the pr
 
 ## Command Used
 ```bash
-riscv32-unknown-elf-gcc -march=rv32imc -mabi=ilp32 -S helloworld.c
+riscv32-unknown-elf-gcc -S -O0 helloworld.c
 ```
 
 This creates `hello.s` containing the assembly code in the same directory.
@@ -215,37 +119,37 @@ This creates `hello.s` containing the assembly code in the same directory.
 
 ## Contents of .s file
 ```bash
-  .file	"helloworld.c"
-  .option nopic
-  .attribute arch, "rv32i2p1_m2p0_a2p1_c2p0"
-  .attribute unaligned_access, 0
-  .attribute stack_align, 16
-  .text
-  .section	.rodata
-  .align	2
+  	.file	"helloworld.c"
+	.option nopic
+	.attribute arch, "rv32i2p1_m2p0_a2p1_c2p0"
+	.attribute unaligned_access, 0
+	.attribute stack_align, 16
+	.text
+	.section	.rodata
+	.align	2
 .LC0:
-  .string	"Hello World"
-  .text
-  .align	1
-  .globl	main
-  .type	main, @function
+	.string	"Hello, World!"
+	.text
+	.align	1
+	.globl	main
+	.type	main, @function
 main:
-  addi	sp,sp,-16
-  sw	ra,12(sp)
-  sw	s0,8(sp)
-  addi	s0,sp,16
-    lui	a5,%hi(.LC0)
-  addi	a0,a5,%lo(.LC0)
-  call	printf
-  li	a5,0
-  mv	a0,a5
-  lw	ra,12(sp)
-  lw	s0,8(sp)
-  addi	sp,sp,16
-  jr	ra
-  .size	main, .-main
-  .ident	"GCC: (g04696df096) 14.2.0"
-  .section	.note.GNU-stack,"",@progbits
+	addi	sp,sp,-16
+	sw	ra,12(sp)
+	sw	s0,8(sp)
+	addi	s0,sp,16
+	lui	a5,%hi(.LC0)
+	addi	a0,a5,%lo(.LC0)
+	call	puts
+	li	a5,0
+	mv	a0,a5
+	lw	ra,12(sp)
+	lw	s0,8(sp)
+	addi	sp,sp,16
+	jr	ra
+	.size	main, .-main
+	.ident	"GCC: (g04696df096) 14.2.0"
+	.section	.note.GNU-stack,"",@progbits
 ```
 
 ### What is the prologue and Epilogue?
