@@ -321,7 +321,7 @@ These are the inputs and destination for the instruction:
 # Task 5: ABI and Register cheat sheet
 ## Objective
 List all 32 RV32 integer registers with their:
-- ABI Names
+- ABI Names - Application Binary Interface
 - typical calling-convention roles
 
 | Register | ABI Name | Description                          | Calling Convention Role |
