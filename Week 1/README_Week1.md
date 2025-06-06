@@ -291,11 +291,11 @@ riscv32-unknown-elf-objdump -d hello.elf > hello.asm
 ```
 The first command is used for creating a raw HEX from the ELF file
 The second command is to disassemble the HEX file using objdump to a .asm file in the same directory
-[!O1](<./Output Screenshots/Cmd for raw HEX.png>)
-[!O2](<./Output Screenshots/Disassemble HEX.png>)
+![O1](<./Output Screenshots/Cmd for raw HEX.png>)
+![O2](<./Output Screenshots/Disassemble HEX.png>)
 
 ### Output .asm file created by disassembly by objdump
-[!.ASM](<./Output Screenshots/Assembly contents.png>)
+![.ASM](<./Output Screenshots/Assembly contents.png>)
 
 ## Breakdown of the instruction fields in main
 | Column           | Meaning                                                     |
