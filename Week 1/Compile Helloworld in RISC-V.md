@@ -4,7 +4,7 @@
 ## Objective
 Compile a simple "Hello, RISC-V" program using the cross-compiler.
 
-## C Program: hello.c
+## C Program: helloworld.c
 ```bash
 gedit helloworld.c
 ```
