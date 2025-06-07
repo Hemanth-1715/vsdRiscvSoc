@@ -518,7 +518,7 @@ Implement a C function to read the RISC-V cycle counter using inline assembly an
 
 ## Commands Used
 ```bash
-riscv32-unknown-elf-gcc -march=rv32imac_zicsr -mabi=ilp32 -nostdlib -nostartfiles -ffreestanding -T bm.ld -o inline.elf inline.c 
+riscv32-unknown-elf-gcc -march=rv32imac_zicsr -mabi=ilp32 -nostdlib -nostartfiles -T linker.ld -o inline.elf start.S inline.c
 qemu-system-riscv32 -nographic -machine virt -kernel inline.elf
 ```
 
@@ -628,3 +628,111 @@ qemu-system-riscv32 -machine virt -nographic -kernel inline.elf
     - =: this is write-only (output-only). The value of c is written by the instruction.
     - r: use a general-purpose register to hold the value of cycle.
     - (c): bind this output to the C variable c.
+
+
+# Task 10:  Memory-Mapped I/O Demo
+## Objective
+Toggle a GPIO register located at address 0x10012000 using bare-metal C, and prevent the compiler from optimizing away the memory access.
+
+## Commands Used
+```bash
+riscv32-unknown-elf-gcc -march=rv32imac_zicsr -mabi=ilp32 -nostdlib -nostartfiles -T linker.ld -o tog.elf start.S tog.c
+qemu-system-riscv32 -machine virt -nographic -kernel tog.elf
+```
+
+## Bare-metal toggle program
+```c
+#include <stdint.h>
+#define UART_BASE 0x10000000
+#define UART_THR  (*(volatile uint8_t *)(UART_BASE + 0x00))  // UART transmit register
+#define GPIO_ADDR 0x10012000
+
+void uart_putc(char c) {
+    UART_THR = c;
+}
+
+void uart_puts(const char *s) {
+    while (*s) uart_putc(*s++);
+}
+
+void delay() {
+    for (volatile int i = 0; i < 100000; ++i);
+}
+
+int main() {
+    volatile uint32_t *gpio = (volatile uint32_t *)GPIO_ADDR;
+
+    uart_puts("GPIO set HIGH\n");
+    *gpio = 0x1;        // Set GPIO high
+    delay();
+
+    uart_puts("GPIO set LOW\n");
+    *gpio = 0x0;        // Set GPIO low
+
+    // Halt the processor using `wfi` (wait for interrupt)
+    while (1) {
+        __asm__ volatile ("wfi");
+    }
+}
+
+```
+
+## Startup and linker file
+```bash
+    .section .text
+    .globl _start
+_start:
+    la sp, _stack_top        # Set stack pointer to top of stack
+    call main                # Call main()
+    # If main returns, loop forever
+1:
+    wfi
+    j 1b
+
+    .section .bss
+    .space 4096              # reserve 4KB stack space (adjust as needed)
+_stack_top:
+```
+
+
+```bash
+ENTRY(_start)
+
+MEMORY {
+    FLASH : ORIGIN = 0x80200000, LENGTH = 4M   /* For code, read+execute */
+    RAM   : ORIGIN = 0x80600000, LENGTH = 12M  /* For data, read+write */
+}
+
+SECTIONS {
+    .text : {
+        *(.text*)
+    } > FLASH
+
+    .rodata : {
+        *(.rodata*)
+    } > FLASH
+
+    .data : {
+        *(.data*)
+    } > RAM
+
+    .bss : {
+        *(.bss*)
+        *(COMMON)
+    } > RAM
+}
+
+```
+
+![GPIO](<./Output Screenshots/GPIO.png>)
+
+## Key Concepts
+### volatile Keyword
+- Tells the compiler not to optimize access to the memory location.
+- Ensures that every read/write to *gpio actually occurs, even if it looks redundant in the code.
+- Without volatile, the compiler might optimize out writes that appear to have no side effects, which is dangerous in embedded I/O.
+
+### Memory Alignment
+- uint32_t is 4 bytes, so 0x10012000 must be 4-byte aligned — which it is.
+- Misaligned accesses can cause hardware faults or undefined behavior on some systems.
+
