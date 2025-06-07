@@ -451,13 +451,16 @@ In embedded systems (like RISC-V development), we don't have an operating system
 
 ### Using QEMU System Emulator
 ```bash
+riscv32-unknown-elf-gcc -march=rv32imac -mabi=ilp32 -nostdlib -nostartfiles -ffreestanding -T bm.ld -o hello_bm.elf hello_bm.c //for compiling and getting .elf file
 qemu-system-riscv32 -nographic -machine virt -kernel hello_bm.elf
+
 ```
 - `qemu-system-riscv32`: Full system emulation for RISC-V 32-bit
 - `-nographic`: Disables graphical output, redirects console to terminal
 - `-kernel hello_bm.elf`: Loads ELF as kernel image for bare-metal execution
 
 ---
+![C1](<./Output Screenshots/Compiling baremetal.png>)
 ![Emu1](<./Output Screenshots/QEMU_Emulation(1).png>)
 ![Emu2](<./Output Screenshots/QEMU_Emulation(2).png>)
 
@@ -508,3 +511,120 @@ riscv32-unknown-elf-gcc -S -O2 helloworld.c -o heloworld_2.s
   - Removes unnecessary variables and stack usage
   - Performs constant folding, inlining, strength reduction, etc.
 
+# Task 9: Inline Assembly Basics 
+
+## Objective
+Implement a C function to read the RISC-V cycle counter using inline assembly and provide detailed explanation of assembly constraints.
+
+## Commands Used
+```bash
+riscv32-unknown-elf-gcc -march=rv32imac_zicsr -mabi=ilp32 -nostdlib -nostartfiles -ffreestanding -T bm.ld -o inline.elf inline.c 
+qemu-system-riscv32 -nographic -machine virt -kernel inline.elf
+```
+
+## A function that returns the cycle counter by reading CSR 0xC00 using inline asm
+```c
+static inline uint32_t rdcycle(void) {
+    uint32_t c;
+    asm volatile ("csrr %0, 0xC00" : "=r"(c));
+    return c;
+}
+```
+## A bare metal .c to print the cycle counter value 
+
+```c
+
+// rdcycle_std.c - RISC-V cycle counter with standard headers
+#include <stdint.h>
+
+#define UART_BASE 0x10000000
+
+// RISC-V cycle counter function using CSR 0xC00
+static inline uint32_t rdcycle(void) {
+    uint32_t c;
+    asm volatile ("csrr %0, 0xC00" : "=r"(c));
+    return c;
+}
+
+// Simple UART output function
+void uart_putc(char c) {
+    volatile uint8_t *uart = (volatile uint8_t *)UART_BASE;
+    *uart = c;
+}
+
+void uart_puts(const char *str) {
+    while (*str) {
+        uart_putc(*str);
+        str++;
+    }
+}
+
+void uart_puthex(uint32_t value) {
+    char hex[] = "0123456789ABCDEF";
+    uart_puts("0x");
+    for (int i = 28; i >= 0; i -= 4) {
+        uart_putc(hex[(value >> i) & 0xF]);
+    }
+}
+
+int main(void) {
+    uart_puts("Testing cycle counter...\n");
+    
+    // Read cycle counter using CSR 0xC00
+    uint32_t cycle_value = rdcycle();
+    
+    uart_puts("Cycle read successful!\n");
+    uart_puts("Cycle value: ");
+    uart_puthex(cycle_value);
+    uart_putc('\n');
+    
+    
+    return 0;
+}
+```
+
+## A startup file .S 
+Since the linker expects an entry point symbol _start (by default), we write a minimal assembly start that sets up the stack pointer and calls main.
+```c
+    .section .text
+    .globl _start
+_start:
+    la sp, _stack_top        # Set stack pointer to top of stack
+    call main                # Call main()
+    # If main returns, loop forever
+1:
+    wfi
+    j 1b
+
+    .section .bss
+    .space 4096              # reserve 4KB stack space (adjust as needed)
+_stack_top:
+
+```
+## Commands Used
+```bash
+riscv32-unknown-elf-gcc -march=rv32imac_zicsr -mabi=ilp32 -nostdlib -nostartfiles -T linker.ld -o inline.elf start.S inline.c
+qemu-system-riscv32 -machine virt -nographic -kernel inline.elf
+```
+![counter](<./Output Screenshots/Cycle counter.png>)
+
+## Explanation of Components
+1. asm volatile(...)
+- This tells the compiler to insert inline assembly into the C code.
+- asm: keyword for GCC-style inline assembly.
+- volatile: tells the compiler not to optimize away or reorder this assembly instruction.
+- Without volatile, the compiler might remove or move this line if it thinks it has no side effects (since the output c is not guaranteed to be used immediately).
+
+
+2. "csrr %0, cycle"
+- This is the RISC-V assembly instruction that reads the cycle CSR (0xC00).
+- csrr: Control and Status Register Read instruction
+- %0: placeholder for the first output operand (in this case, c)
+- It tells the assembler: “substitute this with a register that will hold the output.”
+
+
+3. "=r"(c)
+- his is the output operand constraint, which tells the compiler:
+- =: this is write-only (output-only). The value of c is written by the instruction.
+- r: use a general-purpose register to hold the value of cycle.
+- (c): bind this output to the C variable c.
