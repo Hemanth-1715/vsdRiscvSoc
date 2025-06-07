@@ -262,3 +262,69 @@ List all 32 RV32 integer registers with their:
 | x30      | t5       | Temporary register 5                 | Caller-saved            |
 | x31      | t6       | Temporary register 6                 | Caller-saved            |
 
+# Task 6: Stepping with GDB 
+## Objective
+Debug a RISC-V ELF binary (`helloworld.elf`) using GDB, view the register contents, disassemble instructions, and step through the program using QEMU's GDB remote interface.
+
+## Commands Used
+```bash
+qemu-riscv32 -g 1234 helloworld.elf
+```
+### Now in another terminal:
+
+```bash
+riscv32-unknown-elf-gdb helloworld.elf
+```
+You'll find a gdb prompt now
+
+## Commands Used
+
+### Step 1: Launch QEMU with GDB Server
+```bash
+qemu-riscv32 -g 1234 helloworld.elf
+```
+- Launches QEMU and halts execution.
+- Enables a GDB server on port 1234, waiting for a debugger to connect.
+[!Im1](<./Output Screenshots/Start.png>)
+
+### Step 2: Launch GDB in another terminal
+```bash
+riscv32-unknown-elf-gdb helloworld.elf
+```
+- Starts the RISC-V version of GDB and loads the ELF with symbols.
+
+### Step 3: Connect GDB to QEMU
+```gdb
+(gdb) target remote localhost:1234
+```
+- Establishes connection with QEMU.
+[!Im2](<./Output Screenshots/Starting QEMU.png>)
+
+### Step 4: View all the avaiable functions
+```gdb
+(gdb) info functions
+```
+[!Im3](<./Output Screenshots/Functions.png>)
+
+### Step 5: Set Breakpoint at different functions (_start,main,exit) and Run
+```gdb
+(gdb) break main
+(gdb) continue
+```
+- Execution halts at the corresponding function.
+
+### Step 6: Step Through and Inspect
+```gdb
+(gdb) step
+(gdb) info reg a0
+(gdb) disas /r
+```
+- Step through the program.
+- Inspect register contents (`a0`, `sp`, `ra`, etc.).
+- Disassemble code to view human-readable assembly.
+
+[!Im4](<./Output Screenshots/Breakpoint for _start fn.png>)
+[!Im5](<./Output Screenshots/Breakpoint for main fn.png>)
+[!Im6](<./Output Screenshots/Breakpoint for exit fnn.png>)
+
+---
