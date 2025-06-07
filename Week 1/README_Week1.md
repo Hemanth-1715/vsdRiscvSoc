@@ -267,17 +267,6 @@ List all 32 RV32 integer registers with their:
 Debug a RISC-V ELF binary (`helloworld.elf`) using GDB, view the register contents, disassemble instructions, and step through the program using QEMU's GDB remote interface.
 
 ## Commands Used
-```bash
-qemu-riscv32 -g 1234 helloworld.elf
-```
-### Now in another terminal:
-
-```bash
-riscv32-unknown-elf-gdb helloworld.elf
-```
-You'll find a gdb prompt now
-
-## Commands Used
 
 ### Step 1: Launch QEMU with GDB Server
 ```bash
@@ -308,7 +297,11 @@ riscv32-unknown-elf-gdb helloworld.elf
 
 ### Step 5: Set Breakpoint at different functions (_start,main,exit) and Run
 ```gdb
+(gdb) break _start
+(gdb) continue
 (gdb) break main
+(gdb) continue
+(gdb) break exit
 (gdb) continue
 ```
 - Execution halts at the corresponding function.
