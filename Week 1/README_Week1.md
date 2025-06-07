@@ -610,21 +610,21 @@ qemu-system-riscv32 -machine virt -nographic -kernel inline.elf
 
 ## Explanation of Components
 1. asm volatile(...)
-- This tells the compiler to insert inline assembly into the C code.
-- asm: keyword for GCC-style inline assembly.
-- volatile: tells the compiler not to optimize away or reorder this assembly instruction.
-- Without volatile, the compiler might remove or move this line if it thinks it has no side effects (since the output c is not guaranteed to be used immediately).
+    - This tells the compiler to insert inline assembly into the C code.
+    - asm: keyword for GCC-style inline assembly.
+    - volatile: tells the compiler not to optimize away or reorder this assembly instruction.
+    - Without volatile, the compiler might remove or move this line if it thinks it has no side effects (since the output c is not guaranteed to be used immediately).
 
 
 2. "csrr %0, cycle"
-- This is the RISC-V assembly instruction that reads the cycle CSR (0xC00).
-- csrr: Control and Status Register Read instruction
-- %0: placeholder for the first output operand (in this case, c)
-- It tells the assembler: “substitute this with a register that will hold the output.”
+    - This is the RISC-V assembly instruction that reads the cycle CSR (0xC00).
+    - csrr: Control and Status Register Read instruction
+    - %0: placeholder for the first output operand (in this case, c)
+    - It tells the assembler: “substitute this with a register that will hold the output.”
 
 
 3. "=r"(c)
-- his is the output operand constraint, which tells the compiler:
-- =: this is write-only (output-only). The value of c is written by the instruction.
-- r: use a general-purpose register to hold the value of cycle.
-- (c): bind this output to the C variable c.
+    - his is the output operand constraint, which tells the compiler:
+    - =: this is write-only (output-only). The value of c is written by the instruction.
+    - r: use a general-purpose register to hold the value of cycle.
+    - (c): bind this output to the C variable c.
