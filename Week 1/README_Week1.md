@@ -274,6 +274,7 @@ qemu-riscv32 -g 1234 helloworld.elf
 ```
 - Launches QEMU and halts execution.
 - Enables a GDB server on port 1234, waiting for a debugger to connect.
+- 
 | Component    | Explanation                                                             |
 |--------------|-------------------------------------------------------------------------|
 | qemu-riscv32 | This is the QEMU emulator for a generic 32-bit RISC-V CPU.              |
@@ -334,7 +335,7 @@ riscv32-unknown-elf-gdb helloworld.elf
 - Remote debugging with GDB
 - Proper program execution flow
 The "Hello, World!" appearing in Terminal 1 is the definitive proof that the RISC-V program executed successfully. 
-
+- 
 The cross-compilation chain worked perfectly:
 ✅ C source compiled to RV32IMC ELF
 ✅ ELF loads and runs on RISC-V emulation
