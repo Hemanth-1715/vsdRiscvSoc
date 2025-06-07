@@ -472,3 +472,39 @@ qemu-system-riscv32 -nographic -machine virt -kernel hello_bm.elf
 | **Environment**     | Debug simulator        | Hardware simulation      |
 | **Use Case**        | "What's happening?"    | "Does it work?"          |
 
+# Task 8: Exploring GCC Optimisation 
+
+## Objective
+Observe the differences that appear in the .s files by using two types of gcc optimisation
+
+## Commands Used
+```bash
+riscv32-unknown-elf-gcc -S -O0 helloworld.c -o heloworld_1.s
+riscv32-unknown-elf-gcc -S -O2 helloworld.c -o heloworld_2.s
+```
+
+## Output .s files of -O0 and -O2 optimisation (LHS : -O0; RHS : -O2)
+![Comp](<./Output Screenshots/Comparison.jpg>)
+
+## Explanation of Differences
+
+| Aspect                    | `-O0`                                  | `-O2`                                   |
+| ------------------------- | -------------------------------------- | --------------------------------------- |
+| **Prologue/Epilogue**     | Creates stack frame, saves/restores RA | No stack frame needed                   |
+| **Temporary Variables**   | Stored in memory                       | Eliminated                              |
+| **Loads/Stores**          | Multiple unnecessary memory accesses   | Removed via register usage              |
+| **Function Overhead**     | Conservative; preserves state          | Aggressive optimization; minimal code   |
+| **Dead Code Elimination** | Not done                               | Performed (eliminates unused variables) |
+
+### Why these differences?
+-O0 prioritizes debuggability:
+  - Keeps variables in memory
+  - Avoids instruction reordering
+  - Easier to inspect with a debugger
+
+
+-O2 focuses on execution speed and code size:
+  - Eliminates redundant loads/stores
+  - Removes unnecessary variables and stack usage
+  - Performs constant folding, inlining, strength reduction, etc.
+
