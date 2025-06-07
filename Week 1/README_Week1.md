@@ -285,7 +285,7 @@ qemu-riscv32 -g 1234 helloworld.elf
 ```
 - Launches QEMU and halts execution.
 - Enables a GDB server on port 1234, waiting for a debugger to connect.
-[!Im1](<./Output Screenshots/Start.png>)
+![Im1](<./Output Screenshots/Start.png>)
 
 ### Step 2: Launch GDB in another terminal
 ```bash
@@ -298,13 +298,13 @@ riscv32-unknown-elf-gdb helloworld.elf
 (gdb) target remote localhost:1234
 ```
 - Establishes connection with QEMU.
-[!Im2](<./Output Screenshots/Starting QEMU.png>)
+![Im2](<./Output Screenshots/Starting QEMU.png>)
 
 ### Step 4: View all the avaiable functions
 ```gdb
 (gdb) info functions
 ```
-[!Im3](<./Output Screenshots/Functions.png>)
+![Im3](<./Output Screenshots/Functions.png>)
 
 ### Step 5: Set Breakpoint at different functions (_start,main,exit) and Run
 ```gdb
@@ -323,8 +323,8 @@ riscv32-unknown-elf-gdb helloworld.elf
 - Inspect register contents (`a0`, `sp`, `ra`, etc.).
 - Disassemble code to view human-readable assembly.
 
-[!Im4](<./Output Screenshots/Breakpoint for _start fn.png>)
-[!Im5](<./Output Screenshots/Breakpoint for main fn.png>)
-[!Im6](<./Output Screenshots/Breakpoint for exit fnn.png>)
+![Im4](<./Output Screenshots/Breakpoint for _start fn.png>)
+![Im5](<./Output Screenshots/Breakpoint for main fn.png>)
+![Im6](<./Output Screenshots/Breakpoint for exit fnn.png>)
 
 ---
