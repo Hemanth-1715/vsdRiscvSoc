@@ -344,3 +344,131 @@ The cross-compilation chain worked perfectly:
 ✅ printf() function works correctly
 ✅ Program terminates normally with exit code 0
 ✅ GDB can debug the RISC-V binary remotely
+
+# Task 7: Running Under an Emulator (QEMU)
+
+## Objective
+Execute a bare-metal RISC-V ELF binary using emulators (Spike and QEMU) to simulate real hardware execution and observe UART console output in a production-like environment.
+
+
+## Creating a bare-metal .c file to print "Hello World"
+```c
+// Working Hello World bare-metal program 
+#define UART_BASE 0x10000000
+void _start(void) {
+    // Initialize stack pointer - this is crucial!
+    asm volatile ("li sp, 0x80400000");
+    // Direct UART access - no function calls
+
+    volatile unsigned char *uart = (volatile unsigned char *)UART_BASE;
+    // Print "Hello, World!\n"
+    char *msg1 = "Hello, World!\n";
+
+    while (*msg1) {
+
+        *uart = *msg1;
+
+        msg1++;
+
+    }
+    // Print "This is bare-metal RISC-V!\n"
+
+    char *msg2 = "This is bare-metal RISC-V!\n";
+
+    while (*msg2) {
+
+        *uart = *msg2;
+
+        msg2++;
+
+    }
+
+    // Halt execution with infinite loop
+
+    while (1) {
+        asm volatile ("wfi");  // Wait for interrupt (saves power)
+    }
+}
+```
+## Creating a linker script - .ld
+
+```c
+ENTRY(_start)
+MEMORY {
+
+    RAM : ORIGIN = 0x80200000, LENGTH = 126M
+
+}
+SECTIONS {
+    .text : {
+
+        *(.text)
+
+        *(.text.*)
+
+    } > RAM
+    .data : {
+
+        *(.data)
+
+        *(.data.*)
+    } > RAM
+    .bss : {
+
+        *(.bss)
+
+        *(.bss.*)
+
+    } > RAM
+}
+```
+## Why the above approach
+A linker script (.ld file) is a plain-text configuration file used by the linker (ld) to control how your program's code and data are laid out in memory.
+
+Why Do We Need It?
+In embedded systems (like RISC-V development), we don't have an operating system to manage memory. So we must tell the linker:
+- Where the code (like _start, main) should go
+- Where to place data, bss, and stack
+- How to organize segments in Flash (ROM) and RAM
+- Without this, the program won't know where to load and run from.
+
+
+### Why this .c file and not a general .c file with printf() statements?
+- This is a bare metal code that directly writes characters to the memory-mapped UART (at address 0x10000000)
+- Uses _start() as the entry point, not main()
+- Does not use any standard C libraries
+- Runs on hardware (or emulated hardware like QEMU) without an operating system
+- However printf version: Needs a richer runtime, not suitable for truly bare-metal
+
+### Why This Approach Matters:
+- **Real-world relevance**: Mirrors actual embedded development workflow
+- **Hardware understanding**: Demonstrates system-level programming skills
+- **Testing methodology**: Shows production verification techniques
+- **Progressive learning**: Builds upon previous debugging experience
+
+---
+## Commands Used
+
+### Using QEMU System Emulator
+```bash
+qemu-system-riscv32 -nographic -machine virt -kernel hello_bm.elf
+```
+- `qemu-system-riscv32`: Full system emulation for RISC-V 32-bit
+- `-nographic`: Disables graphical output, redirects console to terminal
+- `-kernel hello_bm.elf`: Loads ELF as kernel image for bare-metal execution
+
+---
+![Emu1](<./Output Screenshots/QEMU_Emulation(1).png>)
+![Emu2](<./Output Screenshots/QEMU_Emulation(2).png>)
+
+
+## Key Learnings and Comparison
+
+| Aspect              | Task 6 (GDB)           | Task 7 (Emulator)        |
+|---------------------|------------------------|--------------------------|
+| **Purpose**         | Debugging & Analysis   | Execution & Testing      |
+| **Control**         | Interactive stepping   | Continuous execution     |
+| **Visibility**      | Instruction-level      | Output-level only        |
+| **Environment**     | Debug simulator        | Hardware simulation      |
+| **Use Case**        | "What's happening?"    | "Does it work?"          |
+
