@@ -737,3 +737,42 @@ SECTIONS {
 - uint32_t is 4 bytes, so 0x10012000 must be 4-byte aligned — which it is.
 - Misaligned accesses can cause hardware faults or undefined behavior on some systems.
 
+# Task 11: Linker Script 101
+## Objective
+To create a  minimal linker script that places .text at 0x00000000 and .data at 0x10000000 for RV32IMC.
+
+## Linker Script
+```bash
+ENTRY(_start)
+
+SECTIONS {
+    .text 0x00000000 : {
+        *(.text)
+        *(.text.*)
+    }
+
+    .data 0x10000000 : {
+        *(.data)
+        *(.data.*)
+    }
+}
+
+```
+## Explanation: Flash vs SRAM
+1. Flash (e.g., address 0x00000000):
+    - Non-volatile storage.
+    - Stores code and sometimes constants.
+    - Read-only during runtime unless special controller access is used.
+
+
+2. SRAM (e.g., address 0x10000000):
+    - Volatile memory.
+    - Used for read/write data sections like .data and .bss.
+    - Loses content on power-off.
+
+
+## Reason for separation:
+- At boot, code runs from Flash.
+- Global/static variables need to be writable — placed in SRAM.
+- The bootloader or startup code often copies .data from Flash to SRAM before jumping to main().
+
