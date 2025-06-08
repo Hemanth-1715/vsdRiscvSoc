@@ -828,4 +828,197 @@ _stack_top:
 
 2. VSDSquad or GitHub: Many educational projects and RISC-V demos on GitHub (search for riscv crt0.S).
 
+# Task 13: Interrupt Primer
+## Objective
+To enable the machine-timer interrupt (MTIP) and write a simple handler in C
 
+## What is the Machine Timer Interrupt (MTIP)?
+
+The **Machine Timer Interrupt (MTIP)** is a fundamental interrupt in the RISC-V privileged architecture. It is triggered by the machine timer, which uses two special memory-mapped registers:
+
+- **mtime**: A continuously incrementing 64-bit timer register representing the current time.
+- **mtimecmp**: A 64-bit comparator register. When `mtime` equals or exceeds `mtimecmp`, the machine timer interrupt is triggered.
+
+These registers are usually implemented in the **CLINT** (Core Local Interruptor) hardware block of the RISC-V system.
+
+---
+
+## How MTIP Works in this Example
+
+- **Setting up MTIP**:  
+  We program `mtimecmp` to `mtime + MTIMECMP_DELAY`. This means the timer interrupt will fire when the current time reaches this new threshold.
+
+- **Interrupt generation**:  
+  When `mtime` reaches `mtimecmp`, the hardware sets the MTIP bit in the machine interrupt pending register (`mip`), causing the machine-level timer interrupt.
+
+- **Interrupt handler**:  
+  Upon interrupt, control transfers to the trap handler (`trap_handler`), which saves the context, calls the C-level `timer_isr()` handler, then restores context and returns using `mret`.
+
+- **Reprogramming the timer**:  
+  Inside `timer_isr()`, we print a message and then set the next interrupt point by updating `mtimecmp` again (`mtime + MTIMECMP_DELAY`). This ensures periodic timer interrupts continue.
+
+- **Interrupt count limit**:  
+  We limit the number of interrupts handled to 5 using a `count` variable, stopping after 5 interrupts.
+
+---
+
+## MTIP handler in C
+```c
+#include <stdint.h>
+#include <stddef.h>
+
+#define UART_BASE        0x10000000
+#define MSTATUS_MIE      (1 << 3)
+#define MIE_MTIE         (1 << 7)
+#define MTIMECMP_DELAY   500000
+
+#define CLINT_MTIME      (*(volatile uint64_t *)(0x200bff8))
+#define CLINT_MTIMECMP   (*(volatile uint64_t *)(0x2004000))
+
+// UART output helper
+void uart_puts(const char *s) {
+    volatile char *uart = (volatile char *)UART_BASE;
+    while (*s) {
+        *uart = *s++;
+    }
+}
+// Timer interrupt handler
+volatile int count = 0;
+
+void timer_isr(void) {
+    if (count < 5) {
+        uart_puts(">> Timer Interrupt Triggered\n");
+        count++;
+        CLINT_MTIMECMP = CLINT_MTIME + MTIMECMP_DELAY;
+    }
+}
+void main(void) {
+    uart_puts("== Timer Interrupt Example ==\n");
+
+    timer_isr();  // Initial test call
+
+    // Set mtvec to point to trap handler
+    extern void trap_handler(void);
+    uintptr_t trap_addr = (uintptr_t)&trap_handler;
+    asm volatile("csrw mtvec, %0" :: "r"(trap_addr));
+
+    // Set first timer interrupt
+    CLINT_MTIMECMP = CLINT_MTIME + MTIMECMP_DELAY;
+
+    // Enable machine timer interrupt and global interrupt
+    asm volatile("csrs mie, %0" :: "r"(MIE_MTIE));
+    asm volatile("csrs mstatus, %0" :: "r"(MSTATUS_MIE));
+
+    while (1) {
+        asm volatile("wfi");
+    }
+}
+
+```
+## Linker
+```
+OUTPUT_ARCH(riscv)
+ENTRY(_start)
+
+MEMORY {
+  RAM (rwx) : ORIGIN = 0x80000000, LENGTH = 16M
+}
+SECTIONS {
+  . = 0x80000000;
+  .text : {
+    *(.text*)
+  }
+  .rodata : {
+    *(.rodata*)
+  }
+  .data : {
+    *(.data*)
+  }
+  .bss : {
+    *(.bss*)
+    *(COMMON)
+  }
+  .trap : {
+    *(.trap)
+  }
+
+  . = ALIGN(4);
+  PROVIDE(_stack_top = ORIGIN(RAM) + LENGTH(RAM));
+}
+```
+## Startup code
+
+```
+.section .text
+.globl _start
+_start:
+    la sp, _stack_top         // Initialize stack pointer
+    call main                 // Call main()
+1:  wfi                       // Halt if main returns
+    j 1b
+
+.section .trap, "ax"
+.globl trap_handler
+trap_handler:
+    addi sp, sp, -16
+    sw ra, 12(sp)
+    sw t0, 8(sp)
+    sw t1, 4(sp)
+    sw t2, 0(sp)
+
+    call timer_isr           // Call C handler
+
+    lw ra, 12(sp)
+    lw t0, 8(sp)
+    lw t1, 4(sp)
+    lw t2, 0(sp)
+    addi sp, sp, 16
+    mret
+
+```
+
+## Commands Used
+```bash
+gedit intr.c
+gedit intr_link.ld
+gedit startup_intr.S
+
+riscv32-unknown-elf-gcc -march=rv32imac_zicsr -mabi=ilp32 -nostdlib -nostartfiles   -T intr_link.ld -o intr.elf startup_intr.S intr.c
+qemu-system-riscv32 -machine virt -nographic -bios none -kernel intr.elf
+```
+
+## Output of the MTIP handler
+![Intr](<./Output Screenshots/Intr_Handler.png>)
+
+- We're setting a machine timer interrupt (MTIP) using mtimecmp = mtime + delay.
+- Every time mtime reaches or exceeds mtimecmp, an interrupt triggers. Threfore it causes loop of interrupts every MTIMECMP_DELAY ticks.
+- Since we have used a simple for loop to limit it to 5 times, we only see 5 interrupt triggers.
+
+## Key Observations from This Task
+
+- **Interrupts trigger periodically** due to the `mtimecmp` update on each timer ISR call, creating a timer tick interrupt every fixed delay.
+
+- **Enabling interrupts properly is crucial**:
+  - Writing the trap vector base address to `mtvec` CSR enables the processor to jump to your trap handler on interrupts.
+  - Setting the machine interrupt enable (`MSTATUS_MIE`) and machine timer interrupt enable (`MIE_MTIE`) bits is essential for receiving timer interrupts.
+
+- **Stack and context management**:  
+  The trap handler saves and restores key registers (`ra`, `t0`, `t1`, `t2`) to preserve the context of the interrupted code. This ensures your interrupt handler doesn’t corrupt the program state.
+
+- **`wfi` instruction usage**:  
+  The main loop uses the `wfi` (wait for interrupt) instruction to reduce power consumption by halting the CPU until the next interrupt.
+
+- **Linker script placement matters**:  
+  The `.trap` section is defined to place the trap handler code correctly in memory, matching the `mtvec` address.
+
+---
+
+## Additional Notes
+
+- The **machine timer interrupt is a key facility for OSes and bare-metal applications** to implement periodic scheduling, timekeeping, or timeouts.
+
+- The **CLINT base addresses** (`0x2004000` for `mtimecmp` and `0x200bff8` for `mtime`) are platform specific and depend on the RISC-V board or emulator configuration (here QEMU virt machine).
+
+- The **`volatile` keyword is essential** when accessing these hardware registers to prevent the compiler from optimizing out necessary reads/writes.
+
+---
