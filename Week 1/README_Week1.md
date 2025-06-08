@@ -339,6 +339,8 @@ The "Hello, World!" appearing in Terminal 1 is the definitive proof that the RIS
  
  
 The cross-compilation chain worked perfectly:
+
+
 ✅ C source compiled to RV32IMC ELF
 ✅ ELF loads and runs on RISC-V emulation
 ✅ printf() function works correctly
