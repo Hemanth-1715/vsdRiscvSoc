@@ -1323,8 +1323,6 @@ SECTIONS {
 
 ---
 
----
-
 ## Commands Used
 ```bash
 # Compile command - Key changes from original:
@@ -1359,7 +1357,7 @@ qemu-system-riscv32 -machine virt -nographic -bios none -kernel threads.elf
 - **Added `syscalls.c` to provide system call implementations
 - **Kept `-nostartfiles` since custom startup code is provided
 
----
+
 
 ## How It Works
 
@@ -1368,11 +1366,11 @@ qemu-system-riscv32 -machine virt -nographic -bios none -kernel threads.elf
 3. **UART Output: Each byte in the buffer is sent to the UART transmit register
 4. **Memory Management: The `_sbrk()` function provides heap space for printf's internal operations
 
----
+
 
 ![Newlib](<./Output Screenshots/Newlib_printf.png>)
 
----
+
 
 ## Key Observations
 
@@ -1383,4 +1381,3 @@ qemu-system-riscv32 -machine virt -nographic -bios none -kernel threads.elf
 - Forms the foundation for more complex I/O operations in embedded systems
 - Can be extended to support input operations by implementing `_read()` with UART receive functionality
 
----
