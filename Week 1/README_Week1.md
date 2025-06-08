@@ -776,3 +776,56 @@ SECTIONS {
 - Global/static variables need to be writable — placed in SRAM.
 - The bootloader or startup code often copies .data from Flash to SRAM before jumping to main().
 
+# Task 12: Start-up Code & crt0 
+
+## Objective
+To understand crt0.S role in a bare-metal RISC-V program and finding out where to get one.
+
+## Startup script
+```asm
+    .section .text
+    .globl _start
+_start:
+    # Set up the stack pointer
+    la sp, _stack_top
+
+    # Zero out the .bss section
+    la a0, __bss_start
+    la a1, __bss_end
+zero_bss:
+    bgeu a0, a1, bss_done
+    sw zero, 0(a0)
+    addi a0, a0, 4
+    j zero_bss
+bss_done:
+
+    # Call main()
+    call main
+
+    # Infinite loop if main returns
+1:
+    wfi
+    j 1b
+
+    .section .bss
+    .globl __bss_start
+    .globl __bss_end
+__bss_start:
+    .space 0x1000    # Adjust size as needed
+__bss_end:
+
+    .space 4096
+_stack_top:
+```
+
+## Where to get a crt0.S?
+1. Newlib: A popular C library for embedded systems, includes a generic crt0.S that you can adapt.
+
+
+    Examples in SDKs:
+    - Microchip’s SoftConsole or SiFive Freedom E SDK.
+    - PlatformIO or Zephyr RTOS projects.
+
+2. VSDSquad or GitHub: Many educational projects and RISC-V demos on GitHub (search for riscv crt0.S).
+
+
