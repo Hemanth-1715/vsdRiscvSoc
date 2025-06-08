@@ -1334,7 +1334,7 @@ riscv32-unknown-elf-gcc -march=rv32imac_zicsr -mabi=ilp32 \
 
 # Run with QEMU
 qemu-system-riscv32 -machine virt -nographic -bios none -kernel threads.elf
-
+```
 ### Note: Uses the same startup assembly (start.S) as the previous tasks
 
 ---
@@ -1357,7 +1357,7 @@ qemu-system-riscv32 -machine virt -nographic -bios none -kernel threads.elf
 - **Added `syscalls.c` to provide system call implementations
 - **Kept `-nostartfiles` since custom startup code is provided
 
-
+---
 
 ## How It Works
 
@@ -1366,11 +1366,11 @@ qemu-system-riscv32 -machine virt -nographic -bios none -kernel threads.elf
 3. **UART Output: Each byte in the buffer is sent to the UART transmit register
 4. **Memory Management: The `_sbrk()` function provides heap space for printf's internal operations
 
-
+---
 
 ![Newlib](<./Output Screenshots/Newlib_printf.png>)
 
-
+---
 
 ## Key Observations
 
